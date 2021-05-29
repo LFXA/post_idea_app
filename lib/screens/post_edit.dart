@@ -2,6 +2,8 @@ import 'dart:convert';
 import "package:flutter/material.dart";
 import 'package:flutter_html/flutter_html.dart';
 import 'package:markdown/markdown.dart' as markdown;
+import 'package:post_idea_app/components/edit_save_dialog.dart';
+import 'package:post_idea_app/components/rich_text_edit.dart';
 import 'package:post_idea_app/models/post.dart';
 import 'package:quill_delta/quill_delta.dart';
 import 'package:quill_markdown/quill_markdown.dart';
@@ -29,7 +31,6 @@ class _PostEditState extends State<PostEdit> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     controller = ZefyrController(NotusDocument());
     if (post.content != null) {
@@ -42,7 +43,7 @@ class _PostEditState extends State<PostEdit> {
   NotusDocument _loadDocument() {
 
     final Delta delta = QuillZefyrBijection.convertJSONToZefyrDelta(
-        '{\"ops\": ${markdownToQuill(html2md.convert(post.content))}}');
+        '{\"ops\": ${markdownToQuill(html2md.convert(post.content,styleOptions: {'headingStyle': 'atx'}))}}');
     return NotusDocument.fromDelta(delta);
   }
 
@@ -54,10 +55,16 @@ class _PostEditState extends State<PostEdit> {
         actions: [
           TextButton(
               onPressed: () {
+               var content = markdown.markdownToHtml(quillToMarkdown(
+                    jsonEncode(controller.document.toDelta())));
+                showDialog(
+                    context: context,
+                    builder: (contextDialog) {
+                      return EditSaveDialog(post, content);
+                    });
+
                 print('html: ' + '${post.content}');
-                print('MK: ' +
-                    markdown.markdownToHtml(quillToMarkdown(
-                        jsonEncode(controller.document.toDelta()))));
+                print('MK: '                    );
               },
               child: Text(
                 'Publicar',
@@ -65,16 +72,7 @@ class _PostEditState extends State<PostEdit> {
               ))
         ],
       ),
-      body: Container(
-        child: ZefyrScaffold(
-          child: ZefyrEditor(
-              padding: EdgeInsets.all(16.0),
-              controller: controller,
-              focusNode: focus,
-            ),
-          ),
-        ),
-
+      body: RichTextEdit(controller, focus)
     );
   }
 }

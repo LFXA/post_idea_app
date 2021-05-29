@@ -14,12 +14,13 @@ class ListPost extends StatefulWidget {
 }
 
 class _ListPostState extends State<ListPost> {
-  var listPost = []..length;
+  var listPost = <Post>[];
   GraphQLConfiguration graphQLConfiguration = GraphQLConfiguration();
 
-  Future<Null> fillList() async {
+  Future fillList() async {
     QueryMutation queryMutation = QueryMutation();
     GraphQLClient _client = graphQLConfiguration.clientToQuery();
+    listPost.clear();
     QueryResult result = await _client.query(
       QueryOptions(
         document: listPost.length == 0 ? gql(queryMutation.getAll()) : gql(queryMutation.getNotInID(listPost.map((e)=> "\"${e.id}\"").toList())),
@@ -34,7 +35,7 @@ class _ListPostState extends State<ListPost> {
                 result.data["posts"][i]["author"],
                 result.data["posts"][i]["category"],
                 result.data["posts"][i]["content"],
-                DateTime.tryParse(result.data["posts"][i]["created"]?? new DateTime(2021).toIso8601String()),
+                DateTime.tryParse(result.data["posts"][i]["created"]?? new DateTime(DateTime.now().year).toIso8601String()),
                 result.data["posts"][i]["excerpt"],
                 result.data["posts"][i]["image"],
                 result.data["posts"][i]["image_caption"],
@@ -85,7 +86,7 @@ class _ListPostState extends State<ListPost> {
               child: RefreshIndicator(
                 onRefresh: fillList,
                 child: ListView.builder(
-                  itemCount: listPost?.length ?? 0,
+                  itemCount: listPost.length,
                   itemBuilder: (context, index) {
 
                     return Container(
